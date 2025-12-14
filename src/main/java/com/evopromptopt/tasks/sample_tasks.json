@@ -1,0 +1,8 @@
+{
+  "task": "Text classification",
+  "description": "Classify customer messages as positive, neutral, or negative.",
+  "evaluation": {
+    "metric": "accuracy",
+    "maxTokens": 256
+  }
+}
