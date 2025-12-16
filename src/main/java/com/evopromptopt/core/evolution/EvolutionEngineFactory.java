@@ -1,4 +1,4 @@
-package com.evopromptopt.evolution;
+package com.evopromptopt.core.evolution;
 
 import com.evopromptopt.core.fitness.PromptFitness;
 import com.evopromptopt.core.genome.PromptGenotypeFactory;
@@ -9,7 +9,7 @@ public final class EvolutionEngineFactory {
 
     private EvolutionEngineFactory() {}
 
-    public static Engine<Gene<?, ?>, Double> create() {
+    public static Engine<EnumGene<String>, Double> create() {
         return Engine.builder(
                         PromptFitness::evaluate,
                         PromptGenotypeFactory::create
