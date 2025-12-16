@@ -1,183 +1,237 @@
-# EvoPromptOpt
+# Evolutionary Prompt Optimization for Small Language Models
 
-**Evolutionary Prompt Optimizer for Small Language Models**
+This project implements an evolutionary computing approach to optimize prompts for small language models (SLMs) using Ollama. It evolves multiple parameters including prompt templates, system prompts, temperature, and other SLM parameters to achieve optimal performance on specific tasks.
 
-EvoPromptOpt is a practical AI system that automatically discovers high-performing prompts for small language models using **evolutionary optimization**.
+## Features
 
-Instead of relying on manual prompt tuning or fixed heuristics, EvoPromptOpt treats prompt design as a **search problem**: prompts are iteratively evolved, evaluated, and refined based on task-level performance metrics. This approach is especially effective for small language models, where prompt quality has a disproportionate impact on results and where no single best prompt exists.
+- **Comprehensive Parameter Optimization**: Evolves system prompts, prompt templates, temperature, max tokens, top-p, top-k, and repeat penalty
+- **Ollama Integration**: Direct integration with Ollama for running small language models
+- **Flexible Evaluation**: Supports accuracy, length, and content quality evaluation metrics
+- **Custom Evolutionary Operators**: Domain-specific crossover and mutation operators
+- **Task-Based Optimization**: Define tasks with test cases and evaluation criteria
+- **Parallel Execution**: Optional parallel evaluation of test cases
 
-The project is designed as an engineering-first system: reproducible, measurable, and extensible.
+## Prerequisites
 
----
+1. **Java 17** or higher
+2. **Ollama** installed and running
+3. At least one language model installed in Ollama (e.g., `llama3.2:3b`)
 
-## Problem Motivation
+### Installing Ollama and Models
 
-Prompt design for language models suffers from several fundamental issues:
+1. Install Ollama from [https://ollama.ai](https://ollama.ai)
+2. Start Ollama service
+3. Install a model (e.g.):
+   ```bash
+   ollama pull llama3.2:3b
+   ```
 
-* There is no exact or universal guideline for an optimal prompt
-* Effective prompts vary significantly across models and tasks
-* Small wording changes can produce non-linear behavior changes
-* Manual prompt tuning does not scale and is hard to reproduce
+## Usage
 
-These characteristics make prompt optimization poorly suited for rule-based or deterministic methods.
+### Basic Usage
 
-EvoPromptOpt addresses this by using **evolutionary algorithms**, which excel in search spaces that are:
+Run with default settings (math problems, llama3.2:3b model):
+```bash
+./gradlew run
+```
 
-* Discrete
-* Non-convex
-* Noisy
-* Multi-solution
+### Advanced Usage
 
-The goal is not to find *the* perfect prompt, but to reliably discover **one or more high-performing prompts** for a given task and model.
+```bash
+./gradlew run --args="<model_name> <task_file> <generations> <population_size>"
+```
 
----
+**Parameters:**
+- `model_name`: Ollama model to use (default: `llama3.2:3b`)
+- `task_file`: Path to task definition JSON (default: `src/main/java/com/evopromptopt/tasks/sample_tasks.json`)
+- `generations`: Number of evolution generations (default: 25)
+- `population_size`: Population size (default: 30)
 
-## Why Evolutionary Optimization
+**Examples:**
 
-Evolutionary algorithms are a natural fit for prompt optimization because:
+Math problem solving:
+```bash
+./gradlew run --args="llama3.2:3b src/main/java/com/evopromptopt/tasks/sample_tasks.json 50 40"
+```
 
-* Prompt quality cannot be expressed as a differentiable objective
-* Multiple prompts may achieve similar performance
-* Exploration is as important as exploitation
-* Evaluation feedback is noisy and task-dependent
+Sentiment classification:
+```bash
+./gradlew run --args="qwen2.5:3b src/main/java/com/evopromptopt/tasks/classification_task.json 30 25"
+```
 
-By evolving prompts over generations, EvoPromptOpt can efficiently explore the prompt space and converge on effective solutions without requiring gradients or handcrafted rules.
+Text summarization:
+```bash
+./gradlew run --args="mistral:7b src/main/java/com/evopromptopt/tasks/summarization_task.json 40 35"
+```
 
----
+## Task Definition
 
-## Why Jenetics
+Tasks are defined in JSON format with the following structure:
 
-Jenetics was chosen as the evolutionary engine because it:
+```json
+{
+  "name": "Task Name",
+  "description": "Task description",
+  "testCases": [
+    {
+      "input": "Input text or question",
+      "expectedOutput": "Expected response (if applicable)",
+      "metadata": {
+        "key": "value"
+      }
+    }
+  ],
+  "evaluation": {
+    "type": "accuracy|length|content",
+    "caseSensitive": false,
+    "trimWhitespace": true,
+    "minLength": 50,
+    "maxLength": 200,
+    "requiredKeywords": ["keyword1", "keyword2"],
+    "bonusKeywords": ["bonus1", "bonus2"]
+  },
+  "configuration": {
+    "maxTokens": 512,
+    "timeoutMs": 30000
+  }
+}
+```
 
-* Is a mature, well-tested Java genetic algorithm library
-* Provides strong type safety and custom genome design
-* Supports deterministic and reproducible experiments
-* Is suitable for production-grade JVM systems
+### Evaluation Types
 
-Using Jenetics allows prompt evolution to be expressed explicitly and cleanly, rather than as ad-hoc random search.
+1. **Accuracy Evaluator**: Exact match evaluation for tasks with definitive answers
+   - Perfect for math problems, classification tasks
+   - Options: `caseSensitive`, `trimWhitespace`
 
----
+2. **Length Evaluator**: Evaluates based on response length and basic quality
+   - Good for summarization tasks
+   - Options: `minLength`, `maxLength`
 
-## System Overview
+3. **Content Quality Evaluator**: Keyword-based content evaluation
+   - Suitable for open-ended tasks
+   - Options: `requiredKeywords`, `bonusKeywords`
 
-At a high level, EvoPromptOpt works as follows:
+## Sample Tasks
 
-1. A task specification defines the objective and evaluation criteria
-2. An initial population of prompt candidates is generated
-3. Each prompt is executed against the task
-4. Task-level metrics are collected
-5. Prompts are evolved using selection, crossover, and mutation
-6. The best-performing prompt is returned along with its configuration
+The project includes several sample tasks:
 
----
+1. **Math Problems** (`sample_tasks.json`): Basic arithmetic with accuracy evaluation
+2. **Sentiment Classification** (`classification_task.json`): Text classification with accuracy evaluation
+3. **Text Summarization** (`summarization_task.json`): Summarization with length and content evaluation
+
+## Evolutionary Parameters
+
+The system optimizes the following parameters:
+
+### Prompt Parameters
+- **System Prompt**: Variations of system instructions
+- **Prompt Template**: Different formatting approaches
+- **Instruction Style**: DIRECT, CONVERSATIONAL, FORMAL, etc.
+- **Tool Policy**: NONE, BASIC, ADVANCED
+- **Response Format**: text, json, markdown
+
+### Model Parameters
+- **Temperature**: 0.1 to 1.5 (creativity vs consistency)
+- **Max Tokens**: 64 to 2048 (response length limit)
+- **Top P**: 0.1 to 1.0 (nucleus sampling)
+- **Top K**: 1 to 100 (top-k sampling)
+- **Repeat Penalty**: 0.5 to 2.0 (repetition control)
+
+## Output
+
+The system provides comprehensive results including:
+
+1. **Evolution Statistics**: Best fitness, generation, total evaluations
+2. **Best Configuration**: Optimized parameters and prompt templates
+3. **Detailed Testing**: Performance on each test case
+4. **Success Metrics**: Success rate, execution time, scores
 
 ## Architecture
 
-```text
-Task Specification
-        │
-        ▼
-Initial Prompt Population
-        │
-        ▼
-Evolution Engine (Jenetics)
-  ├─ Selection
-  ├─ Crossover
-  └─ Mutation
-        │
-        ▼
-Prompt Execution Layer
-        │
-        ▼
-Metric Evaluation
-        │
-        ▼
-Best Prompt Candidate
+The system is designed with modularity and extensibility in mind:
+
+- **Core Components**: Evolution engine, genome representation, fitness evaluation
+- **Execution Layer**: Ollama client, prompt executors
+- **Evaluation Framework**: Pluggable metrics for different task types
+- **Task Management**: JSON-based task definitions and loading
+- **Evolution Operators**: Custom crossover and mutation for prompt optimization
+
+## Extending the System
+
+### Adding New Evaluation Metrics
+
+1. Implement the `EvaluationMetric` interface
+2. Register the new metric in `TaskLoader`
+3. Use in task definition JSON
+
+### Adding New Execution Backends
+
+1. Implement the `PromptExecutor` interface
+2. Create backend-specific request/response classes
+3. Update the main runner to use the new executor
+
+### Creating Custom Tasks
+
+1. Create a JSON task definition file
+2. Define test cases with inputs and expected outputs
+3. Choose appropriate evaluation metrics
+4. Run with the new task file
+
+## Configuration
+
+The system can be configured via `application.properties`:
+
+```properties
+# Ollama settings
+ollama.base_url=http://localhost:11434
+ollama.default_model=llama3.2:3b
+
+# Evolution settings
+evolution.population_size=30
+evolution.max_generations=25
+evolution.mutation_rate=0.15
+evolution.crossover_rate=0.65
+
+# Fitness weights
+fitness.score_weight=0.6
+fitness.success_rate_weight=0.3
+fitness.execution_time_weight=0.1
 ```
 
----
+## Troubleshooting
 
-## Prompt Representation
+### Common Issues
 
-Prompts are represented as **structured configurations**, not raw text blobs. This improves stability and interpretability during evolution.
+1. **"Ollama is not available"**
+   - Ensure Ollama is running: `ollama serve`
+   - Check if the model is installed: `ollama list`
+   - Verify the base URL is correct
 
-A prompt genome may include:
+2. **Out of memory errors**
+   - Reduce population size
+   - Use smaller models
+   - Reduce max tokens in task configuration
 
-* System role definition
-* Instruction style (concise, step-by-step, reflective)
-* Output constraints
-* Tool usage directives
-* Decoding parameters (e.g., temperature)
+3. **Slow evolution**
+   - Reduce timeout values
+   - Use smaller models
+   - Enable parallel execution (with caution)
+   - Reduce number of test cases
 
-This structure allows meaningful mutations while avoiding destructive changes.
+4. **Poor convergence**
+   - Increase population size
+   - Increase number of generations
+   - Adjust mutation and crossover rates
+   - Review task definition and evaluation metrics
 
----
+## Contributing
 
-## Fitness Evaluation
+1. Fork the repository
+2. Create a feature branch
+3. Implement your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-Each prompt candidate is evaluated using task-specific, measurable metrics.
+## License
 
-A typical fitness function may combine:
-
-```
-fitness =
-  α × task_success_score
-- β × token_cost
-- γ × verbosity_penalty
-- δ × failure_penalty
-```
-
-This ensures optimization is objective, reproducible, and aligned with real-world constraints.
-
----
-
-## Tech Stack
-
-* Java 17+
-* Jenetics (evolutionary algorithms)
-* Small Language Models (local)
-* Gradle
-* SLF4J / Logback
-
----
-
-## Repository Structure
-
-```text
-EvoPromptOpt/
-├── core/
-│   ├── genome/        # Prompt genome definitions
-│   ├── evolution/     # Jenetics configuration
-│   ├── fitness/       # Evaluation logic
-│   └── execution/     # Prompt execution layer
-├── app/
-│   └── EvoPromptRunner.java
-├── tasks/
-│   └── sample_tasks.json
-├── README.md
-└── build.gradle
-```
-
----
-
-## Example Use Cases
-
-* Optimizing prompts for classification tasks
-* Discovering task-specific prompts for small language models
-* Reducing token usage while maintaining accuracy
-* Adapting prompts across different model architectures
-
----
-
-## Project Goals
-
-* Demonstrate evolutionary optimization applied to language models
-* Provide a reproducible alternative to manual prompt tuning
-* Emphasize engineering rigor over heuristic prompt design
-* Serve as a foundation for future extensions (e.g., agent-based reasoning)
-
----
-
-## Status
-
-This project is under active development. The current focus is on establishing a robust evolutionary core and reliable evaluation methodology.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

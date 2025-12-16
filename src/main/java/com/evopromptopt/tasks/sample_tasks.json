@@ -1,8 +1,31 @@
 {
-  "task": "Text classification",
-  "description": "Classify customer messages as positive, neutral, or negative.",
+  "name": "Math Problem Solving",
+  "description": "Solve basic arithmetic problems and provide numerical answers",
+  "testCases": [
+    {
+      "input": "What is 15 + 27?",
+      "expectedOutput": "42"
+    },
+    {
+      "input": "Calculate 8 * 9",
+      "expectedOutput": "72"
+    },
+    {
+      "input": "What is 144 / 12?",
+      "expectedOutput": "12"
+    },
+    {
+      "input": "Solve: 25 - 13",
+      "expectedOutput": "12"
+    }
+  ],
   "evaluation": {
-    "metric": "accuracy",
-    "maxTokens": 256
+    "type": "accuracy",
+    "caseSensitive": false,
+    "trimWhitespace": true
+  },
+  "configuration": {
+    "maxTokens": 64,
+    "timeoutMs": 30000
   }
 }

@@ -1,0 +1,48 @@
+{
+  "name": "Sentiment Classification",
+  "description": "Classify customer messages as positive, neutral, or negative sentiment",
+  "testCases": [
+    {
+      "input": "I absolutely love this product! It exceeded all my expectations.",
+      "expectedOutput": "positive"
+    },
+    {
+      "input": "The product is okay, nothing special but does the job.",
+      "expectedOutput": "neutral"
+    },
+    {
+      "input": "This is terrible quality and completely useless.",
+      "expectedOutput": "negative"
+    },
+    {
+      "input": "Great customer service and fast delivery!",
+      "expectedOutput": "positive"
+    },
+    {
+      "input": "The item arrived damaged and doesn't work properly.",
+      "expectedOutput": "negative"
+    },
+    {
+      "input": "Standard product with average performance.",
+      "expectedOutput": "neutral"
+    },
+    {
+      "input": "Amazing value for money, highly recommended!",
+      "expectedOutput": "positive"
+    },
+    {
+      "input": "Poor quality materials and disappointing results.",
+      "expectedOutput": "negative"
+    }
+  ],
+  "evaluation": {
+    "type": "accuracy",
+    "caseSensitive": false,
+    "trimWhitespace": true
+  },
+  "configuration": {
+    "maxTokens": 32,
+    "timeoutMs": 15000
+  }
+}
+

@@ -1,0 +1,41 @@
+{
+  "name": "Text Summarization",
+  "description": "Create concise summaries of provided text passages",
+  "testCases": [
+    {
+      "input": "The rapid advancement of artificial intelligence has transformed numerous industries in recent years. From healthcare diagnostics to autonomous vehicles, AI systems are becoming increasingly sophisticated and capable. Machine learning algorithms can now process vast amounts of data to identify patterns and make predictions with remarkable accuracy. However, this technological progress also raises important questions about job displacement, privacy, and the need for proper regulation to ensure AI benefits society as a whole.",
+      "expectedOutput": "",
+      "metadata": {
+        "topic": "AI advancement",
+        "expectedLength": "50-100 words"
+      }
+    },
+    {
+      "input": "Climate change represents one of the most pressing challenges facing humanity today. Rising global temperatures, melting ice caps, and extreme weather events are clear indicators of our changing climate. The primary cause is the increased emission of greenhouse gases from human activities, particularly the burning of fossil fuels. Addressing this crisis requires immediate action including transitioning to renewable energy sources, improving energy efficiency, and implementing policies that reduce carbon emissions across all sectors of the economy.",
+      "expectedOutput": "",
+      "metadata": {
+        "topic": "Climate change",
+        "expectedLength": "50-100 words"
+      }
+    }
+  ],
+  "evaluation": {
+    "metrics": [
+      {
+        "type": "length",
+        "minLength": 50,
+        "maxLength": 100
+      },
+      {
+        "type": "content",
+        "requiredKeywords": ["key", "main", "important", "primary"],
+        "bonusKeywords": ["summary", "conclude", "overall", "essentially"]
+      }
+    ]
+  },
+  "configuration": {
+    "maxTokens": 150,
+    "timeoutMs": 45000
+  }
+}
+

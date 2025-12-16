@@ -2,11 +2,13 @@ package com.evopromptopt.core.execution;
 
 import com.evopromptopt.core.genome.PromptGenome;
 
-public class PromptExecutor {
-
-    public ExecutionResult execute(PromptGenome prompt, String input) {
-        // Execution logic will be model-specific
-        // For now, return a deterministic stub result
-        return new ExecutionResult(true, 120);
-    }
+public interface PromptExecutor {
+    /**
+     * Executes a prompt with the given genome configuration on a specific task
+     *
+     * @param genome The prompt genome containing all parameters
+     * @param task   The task/input to process
+     * @return       ExecutionResult containing response and metrics
+     */
+    ExecutionResult execute(PromptGenome genome, String task);
 }

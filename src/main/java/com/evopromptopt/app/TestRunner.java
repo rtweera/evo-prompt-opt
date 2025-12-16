@@ -2,7 +2,6 @@ package com.evopromptopt.app;
 
 import com.evopromptopt.core.evolution.EvolutionEngineFactory;
 import com.evopromptopt.core.execution.MockPromptExecutor;
-import com.evopromptopt.core.execution.ollama.OllamaPromptExecutor;
 import com.evopromptopt.core.genome.PromptGenome;
 import com.evopromptopt.core.genome.PromptGenotypeFactory;
 import com.evopromptopt.core.tasks.TaskDefinition;
@@ -10,39 +9,30 @@ import com.evopromptopt.core.tasks.TaskLoader;
 import com.evopromptopt.core.tasks.TaskRunner;
 import io.jenetics.IntegerGene;
 import io.jenetics.engine.EvolutionResult;
-import io.jenetics.util.ISeq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class EvoPromptRunner {
-    private static final Logger logger = LoggerFactory.getLogger(EvoPromptRunner.class);
+/**
+ * Test runner that demonstrates the evolutionary prompt optimization system
+ * using a mock executor (no Ollama required)
+ */
+public class TestRunner {
+    private static final Logger logger = LoggerFactory.getLogger(TestRunner.class);
 
     public static void main(String[] args) {
-        // Configuration
-        String modelName = args.length > 0 ? args[0] : "llama3.2:3b";
-        String taskFile = args.length > 1 ? args[1] : "src/main/java/com/evopromptopt/tasks/sample_tasks.json";
-        int generations = args.length > 2 ? Integer.parseInt(args[2]) : 25;
-        int populationSize = args.length > 3 ? Integer.parseInt(args[3]) : 30;
+        String taskFile = args.length > 0 ? args[0] : "src/main/java/com/evopromptopt/tasks/sample_tasks.json";
+        int generations = args.length > 1 ? Integer.parseInt(args[1]) : 10;
+        int populationSize = args.length > 2 ? Integer.parseInt(args[2]) : 20;
 
-        logger.info("Starting evolutionary prompt optimization...");
-        logger.info("Model: {}, Task file: {}, Generations: {}, Population: {}",
-                   modelName, taskFile, generations, populationSize);
+        logger.info("Starting evolutionary prompt optimization test...");
+        logger.info("Task file: {}, Generations: {}, Population: {}", taskFile, generations, populationSize);
 
         try {
-            // Initialize components
-            var ollamaExecutor = new OllamaPromptExecutor(modelName);
-
-            // Check if Ollama is available, fall back to mock if not
-            boolean usingMock = false;
-            if (!ollamaExecutor.isAvailable()) {
-                logger.warn("Ollama is not available. Using mock executor for demonstration purposes.");
-                logger.warn("To use real Ollama integration, please ensure Ollama is running and the model '{}' is installed.", modelName);
-                usingMock = true;
-            }
+            // Initialize components with mock executor
+            var mockExecutor = new MockPromptExecutor();
 
             // Load task definition
             var taskLoader = new TaskLoader();
@@ -52,16 +42,20 @@ public class EvoPromptRunner {
                 String taskJson = Files.readString(Paths.get(taskFile));
                 task = taskLoader.loadFromJson(taskJson);
                 logger.info("Loaded task: {} with {} test cases", task.getName(), task.getTestCases().size());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("Failed to load task file: {}", taskFile, e);
-                System.exit(1);
                 return;
             }
 
             // Create task runner
-            var taskRunner = usingMock ?
-                new TaskRunner(new MockPromptExecutor(), false) :
-                new TaskRunner(ollamaExecutor, false); // Sequential execution for stability
+            var taskRunner = new TaskRunner(mockExecutor, false);
+
+            // Test a single genome first
+            logger.info("Testing a single random genome...");
+            var testGenome = PromptGenotypeFactory.decode(PromptGenotypeFactory.create());
+            var testResult = taskRunner.evaluateGenome(testGenome, task);
+            logger.info("Single genome test - Score: {:.4f}, Success rate: {:.2f}%",
+                       testResult.overallScore(), testResult.successRate() * 100);
 
             // Create evolution engine
             var engine = EvolutionEngineFactory.create(taskRunner, task, populationSize, generations);
@@ -72,7 +66,7 @@ public class EvoPromptRunner {
             var evolutionStream = engine.stream()
                 .limit(generations)
                 .peek(result -> {
-                    if (result.generation() % 5 == 0 || result.generation() == 1) {
+                    if (result.generation() % 2 == 0 || result.generation() == 1) {
                         logger.info("Generation {}: Best fitness = {:.4f}, Avg fitness = {:.4f}",
                                 result.generation(),
                                 result.bestFitness(),
@@ -91,19 +85,17 @@ public class EvoPromptRunner {
 
             // Cleanup
             taskRunner.shutdown();
-            if (!usingMock) {
-                ollamaExecutor.close();
-            }
+
+            logger.info("Evolution test completed successfully!");
 
         } catch (Exception e) {
-            logger.error("Evolution failed", e);
-            System.exit(1);
+            logger.error("Evolution test failed", e);
         }
     }
 
     private static void displayResults(EvolutionResult<IntegerGene, Double> result, TaskDefinition task) {
         System.out.println("\n" + "=".repeat(60));
-        System.out.println("EVOLUTIONARY PROMPT OPTIMIZATION RESULTS");
+        System.out.println("EVOLUTIONARY PROMPT OPTIMIZATION TEST RESULTS");
         System.out.println("=".repeat(60));
 
         System.out.printf("Task: %s%n", task.getName());
@@ -150,7 +142,8 @@ public class EvoPromptRunner {
         for (int i = 0; i < testResult.testCaseResults().size(); i++) {
             var testCase = testResult.testCaseResults().get(i);
             System.out.printf("Test Case %d:%n", i + 1);
-            System.out.printf("  Input: %s%n", testCase.input());
+            System.out.printf("  Input: %s%n", testCase.input().length() > 50 ?
+                             testCase.input().substring(0, 50) + "..." : testCase.input());
             System.out.printf("  Output: %s%n", testCase.actualOutput());
             System.out.printf("  Score: %.4f%n", testCase.score());
             System.out.printf("  Success: %s%n", testCase.success() ? "✓" : "✗");
